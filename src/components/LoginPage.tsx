@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, Smartphone, Download } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 export const LoginPage: React.FC = () => {
-  const { signIn, signUp } = useAuth();
-  const [isLogin, setIsLogin] = useState(true);
+  const { signIn } = useAuth();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,14 +20,9 @@ export const LoginPage: React.FC = () => {
     setError('');
 
     try {
-      const result = isLogin 
-        ? await signIn(formData.email, formData.password)
-        : await signUp(formData.email, formData.password);
-
+      const result = await signIn(formData.email, formData.password);
       if (result.error) {
         setError(result.error);
-      } else if (!isLogin) {
-        setError('Check your email for the confirmation link!');
       }
     } catch (err) {
       setError('An unexpected error occurred');
@@ -249,22 +244,19 @@ export const LoginPage: React.FC = () => {
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 px-4 rounded-lg hover:from-purple-700 hover:to-blue-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {loading ? 'Processing...' : (isLogin ? 'Login' : 'Sign Up')}
+                  {loading ? 'Processing...' : 'Login'}
                 </button>
               </form>
 
               <div className="text-center mt-6">
                 <p className="text-sm text-gray-600">
-                  {isLogin ? "Don't have an account? " : "Already have an account? "}
-                  <button
-                    onClick={() => {
-                      setIsLogin(!isLogin);
-                      setError('');
-                    }}
+                  Don't have an account?{' '}
+                  <Link
+                    to="/signup"
                     className="text-purple-600 hover:text-purple-700 font-medium"
                   >
-                    {isLogin ? 'Click here' : 'Sign in'}
-                  </button>
+                    Sign up
+                  </Link>
                 </p>
               </div>
 

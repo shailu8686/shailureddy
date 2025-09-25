@@ -8,3 +8,20 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Create storage bucket for evidence files if it doesn't exist
+const initializeStorage = async () => {
+  const { data: buckets } = await supabase.storage.listBuckets();
+  const evidenceBucket = buckets?.find(bucket => bucket.name === 'evidence-files');
+  
+  if (!evidenceBucket) {
+    await supabase.storage.createBucket('evidence-files', {
+      public: true,
+      allowedMimeTypes: ['image/png', 'image/jpeg', 'application/pdf'],
+      fileSizeLimit: 10485760 // 10MB
+    });
+  }
+};
+
+// Initialize storage on module load
+initializeStorage().catch(console.error);

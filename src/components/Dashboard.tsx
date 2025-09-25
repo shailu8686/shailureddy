@@ -1,158 +1,80 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Database, RefreshCw, LogOut, User } from 'lucide-react';
-import { UPIRecord } from '../types';
-import { useUPIData } from '../hooks/useUPIData';
+import React from 'react';
+import { NavLink, useNavigate } from 'react-router-dom';
+import { Database, LogOut, User, AlertTriangle, FileText } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { SearchAndFilter } from './SearchAndFilter';
-import { StatsCards } from './StatsCards';
-import { UPITable } from './UPITable';
-import { AddEditModal } from './AddEditModal';
 
-export const Dashboard: React.FC = () => {
+export const Dashboard: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, signOut } = useAuth();
-  const { records, loading, error, addRecord, updateRecord, deleteRecord, refreshRecords } = useUPIData();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Safe' | 'Risk'>('All');
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editRecord, setEditRecord] = useState<UPIRecord | null>(null);
-
-  const filteredRecords = useMemo(() => {
-    if (!records || !Array.isArray(records)) {
-      return [];
-    }
-    
-    return records.filter((record) => {
-      const matchesSearch = 
-        record.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.upiId.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesStatus = statusFilter === 'All' || record.status === statusFilter;
-      
-      return matchesSearch && matchesStatus;
-    });
-  }, [records, searchTerm, statusFilter]);
-
-  const handleAddRecord = (record: Omit<UPIRecord, 'id'>) => {
-    addRecord(record);
-  };
-
-  const handleEditRecord = (record: UPIRecord) => {
-    setEditRecord(record);
-    setIsModalOpen(true);
-  };
-
-  const handleUpdateRecord = (updatedRecord: Omit<UPIRecord, 'id'>) => {
-    if (editRecord) {
-      updateRecord(editRecord.id, updatedRecord);
-      setEditRecord(null);
-    }
-  };
-
-  const handleDeleteRecord = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this record?')) {
-      deleteRecord(id);
-    }
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setEditRecord(null);
-  };
+  const navigate = useNavigate();
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/login');
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-gray-600">
-          <RefreshCw className="w-6 h-6 animate-spin" />
-          <span className="text-lg">Loading UPI records...</span>
-        </div>
-      </div>
-    );
-  }
+  const navLinkClasses = "flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors";
+  const activeNavLinkClasses = "bg-blue-100 text-blue-700";
+  const inactiveNavLinkClasses = "text-gray-600 hover:bg-gray-100 hover:text-gray-900";
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-8">
-          <div className="flex items-center gap-3 mb-4 sm:mb-0">
-            <Database className="w-8 h-8 text-blue-600" />
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">UPI Management System</h1>
-              <p className="text-gray-600 mt-1">Manage and monitor UPI records with risk assessment</p>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg border">
-              <User className="w-4 h-4 text-gray-500" />
-              <span className="text-sm text-gray-700">{user?.email}</span>
-            </div>
-            <button
-              onClick={refreshRecords}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Refresh
-            </button>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Add Record
-            </button>
-            <button
-              onClick={handleSignOut}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              Sign Out
-            </button>
+    <div className="min-h-screen bg-gray-100 flex">
+      {/* Sidebar */}
+      <div className="w-64 bg-white border-r flex flex-col">
+        <div className="flex items-center justify-center h-16 border-b">
+          <div className="flex items-center gap-2 text-blue-600">
+            <Database className="w-7 h-7" />
+            <span className="text-xl font-bold">UPI Shield</span>
           </div>
         </div>
-
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-red-800 font-medium">Error: {error}</p>
-            <p className="text-red-600 text-sm mt-1">Using offline data. Check your connection and try refreshing.</p>
+        <nav className="flex-1 px-4 py-6 space-y-2">
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : inactiveNavLinkClasses}`}
+          >
+            <Database className="w-5 h-5" />
+            UPI Records
+          </NavLink>
+          <NavLink
+            to="/reports"
+            className={({ isActive }) => `${navLinkClasses} ${isActive ? activeNavLinkClasses : inactiveNavLinkClasses}`}
+          >
+            <FileText className="w-5 h-5" />
+            My Reports
+          </NavLink>
+        </nav>
+        <div className="px-4 py-4 border-t">
+          <div className="flex items-center gap-3 mb-4 p-2 bg-gray-50 rounded-lg">
+            <User className="w-8 h-8 p-1.5 bg-gray-200 text-gray-600 rounded-full" />
+            <div className="flex-1 overflow-hidden">
+              <p className="text-sm font-medium text-gray-800 truncate">{user?.email}</p>
+              <p className="text-xs text-gray-500">Administrator</p>
+            </div>
           </div>
-        )}
-
-        {/* Stats */}
-        <StatsCards records={records || []} />
-
-        {/* Search and Filter */}
-        <SearchAndFilter
-          searchTerm={searchTerm}
-          onSearchChange={setSearchTerm}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-        />
-
-        {/* Results Summary */}
-        <div className="mb-4 text-sm text-gray-600">
-          Showing {filteredRecords.length} of {records?.length || 0} records
+          <button
+            onClick={handleSignOut}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Sign Out
+          </button>
         </div>
+      </div>
 
-        {/* Table */}
-        <UPITable
-          records={filteredRecords}
-          onEdit={handleEditRecord}
-          onDelete={handleDeleteRecord}
-        />
-
-        {/* Add/Edit Modal */}
-        <AddEditModal
-          isOpen={isModalOpen}
-          onClose={handleModalClose}
-          onSubmit={editRecord ? handleUpdateRecord : handleAddRecord}
-          editRecord={editRecord}
-        />
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col">
+        <header className="bg-white border-b h-16 flex items-center justify-end px-6">
+          <button
+            onClick={() => navigate('/reports')}
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Report Fraud
+          </button>
+        </header>
+        <main className="flex-1 p-6 overflow-y-auto">
+          {children}
+        </main>
       </div>
     </div>
   );

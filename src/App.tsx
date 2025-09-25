@@ -1,33 +1,54 @@
 import React from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
 import { LoginPage } from './components/LoginPage';
+import { SignUpPage } from './components/SignUpPage';
 import { Dashboard } from './components/Dashboard';
+import { UPIDataView } from './components/UPIDataView';
+import { ReportsList } from './components/ReportsList';
+import { ReportDetail } from './components/ReportDetail';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
-const AppContent: React.FC = () => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center gap-3 text-gray-600">
-          <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-lg">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <LoginPage />;
-  }
-
-  return <Dashboard />;
+const PublicRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return <ProtectedRoute inverse>{children}</ProtectedRoute>;
 };
 
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <Routes>
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/signup"
+          element={
+            <PublicRoute>
+              <SignUpPage />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <Dashboard>
+                <Routes>
+                  <Route index element={<UPIDataView />} />
+                  <Route path="reports" element={<ReportsList />} />
+                  <Route path="reports/:reportId" element={<ReportDetail />} />
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
+              </Dashboard>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
     </AuthProvider>
   );
 }
